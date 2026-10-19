@@ -20,18 +20,22 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="flex min-h-full flex-col">
-        <header className="flex items-center justify-between border-b border-[var(--stroke)] px-6 py-3">
-          <Link href="/" className="text-sm font-medium tracking-wide text-[var(--ink)]">
-            CS Escape Lab
-          </Link>
-          <p className="text-xs text-[var(--muted)]">Investigate · Debug · Escape</p>
-        </header>
-        {children}
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+      <body className="min-h-full bg-[var(--background)] text-[var(--ink)]">
+        <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-5 sm:px-8">
+          <header className="flex items-center justify-between border-b border-[var(--stroke)] py-5">
+            <Link href="/" className="text-sm font-semibold tracking-tight">
+              CS Escape Lab
+            </Link>
+            <Link
+              href="/#missions"
+              className="text-sm text-[var(--muted)] hover:text-[var(--ink)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--accent)]"
+            >
+              Missions
+            </Link>
+          </header>
+          {children}
+        </div>
       </body>
     </html>
   );

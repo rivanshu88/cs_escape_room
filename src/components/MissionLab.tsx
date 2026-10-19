@@ -21,7 +21,8 @@ const STATUS_LABEL: Record<CaseResult["status"], string> = {
 };
 
 export function MissionLab({ mission, starter }: MissionLabProps) {
-  const stored = useLabStore((state) => state.codeByMission[mission.id]);
+  const storeKey = `${mission.id}:${mission.seed ?? "static"}`;
+  const stored = useLabStore((state) => state.codeByMission[storeKey]);
   const setCode = useLabStore((state) => state.setCode);
   const code = stored ?? starter;
   const [running, setRunning] = useState(false);
@@ -59,18 +60,17 @@ export function MissionLab({ mission, starter }: MissionLabProps) {
   }
 
   return (
-    <div className="grid min-h-0 flex-1 grid-cols-1 gap-px bg-[var(--stroke)] md:grid-cols-[minmax(0,1fr)_300px]">
-      <section className="flex min-h-[360px] flex-col bg-[var(--panel)]">
-        <header className="flex items-center justify-between border-b border-[var(--stroke)] px-4 py-3">
+    <div className="grid min-h-[620px] grid-cols-1 lg:grid-cols-[minmax(0,1.5fr)_minmax(280px,0.8fr)]">
+      <section className="flex min-h-[420px] flex-col border-b border-[var(--stroke)] lg:border-b-0 lg:border-r">
+        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--stroke)] py-3 pr-0 sm:pr-5">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">Evidence locker · {mission.entry}()</p>
-            <h2 className="text-sm font-medium text-[var(--ink)]">Live source</h2>
+            <p className="text-xs text-[var(--muted)]">Edit the source · {mission.entry}()</p>
           </div>
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setCode(mission.id, starter)}
-              className="rounded-md border border-[var(--stroke)] px-3 py-1.5 text-xs text-[var(--muted)] hover:text-[var(--ink)]"
+              onClick={() => setCode(storeKey, starter)}
+              className="rounded-md border border-[var(--stroke)] px-3 py-2 text-xs text-[var(--muted)] hover:bg-[var(--panel)] hover:text-[var(--ink)]"
             >
               Reset starter
             </button>
@@ -78,22 +78,22 @@ export function MissionLab({ mission, starter }: MissionLabProps) {
               type="button"
               onClick={investigate}
               disabled={running}
-              className="rounded-md bg-[var(--accent)] px-3 py-1.5 text-xs font-medium text-[#081018] disabled:opacity-60"
+              className="rounded-md bg-[var(--accent)] px-4 py-2 text-xs font-medium text-white hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-70"
             >
               {running ? "Running…" : "Investigate"}
             </button>
           </div>
         </header>
         <div className="min-h-0 flex-1">
-          <CodeEditor value={code} onChange={(next) => setCode(mission.id, next)} />
+          <CodeEditor value={code} onChange={(next) => setCode(storeKey, next)} />
         </div>
       </section>
 
-      <aside className="flex min-h-0 flex-col bg-[var(--panel)]">
-        <div className="border-b border-[var(--stroke)] px-4 py-3">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">Incident board</p>
+      <aside className="flex min-h-[420px] flex-col lg:pl-5">
+        <div className="border-b border-[var(--stroke)] py-4">
+          <h2 className="text-sm font-medium">Test results</h2>
           {results ? (
-            <p className="mt-1 text-sm text-[var(--ink)]">
+            <p className="mt-2 text-sm leading-6 text-[var(--ink)]">
               {cleared
                 ? "All probes cleared. Mission complete."
                 : hangCount
@@ -101,11 +101,11 @@ export function MissionLab({ mission, starter }: MissionLabProps) {
                   : "Some probes still fail. Read the trace."}
             </p>
           ) : (
-            <p className="mt-1 text-sm text-[var(--muted)]">Run an investigation to capture traces.</p>
+            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Run an investigation to capture traces.</p>
           )}
         </div>
 
-        <ul className="max-h-48 overflow-auto border-b border-[var(--stroke)]">
+        <ul className="max-h-52 overflow-auto border-b border-[var(--stroke)]">
           {mission.cases.map((testCase) => {
             const result = results?.find((item) => item.caseId === testCase.id);
             const active = selected?.caseId === testCase.id;
@@ -114,8 +114,9 @@ export function MissionLab({ mission, starter }: MissionLabProps) {
                 <button
                   type="button"
                   onClick={() => setSelectedId(testCase.id)}
-                  className={`flex w-full items-center justify-between px-4 py-2 text-left text-xs ${
-                    active ? "bg-[var(--panel-2)] text-[var(--ink)]" : "text-[var(--muted)] hover:bg-[var(--panel-2)]"
+                  aria-pressed={active}
+                  className={`flex w-full items-center justify-between py-2.5 text-left text-sm ${
+                    active ? "text-[var(--ink)]" : "text-[var(--muted)] hover:text-[var(--ink)]"
                   }`}
                 >
                   <span className="font-mono">{testCase.id}</span>
@@ -128,10 +129,10 @@ export function MissionLab({ mission, starter }: MissionLabProps) {
           })}
         </ul>
 
-        <div className="min-h-0 flex-1 overflow-auto px-4 py-3">
+        <div className="min-h-0 flex-1 overflow-auto py-4">
           {selected ? (
             <>
-              <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--muted)]">
                 Trace · {selected.caseId} · {selected.trace.length} steps
               </p>
               {selected.message ? (
@@ -164,8 +165,8 @@ export function MissionLab({ mission, starter }: MissionLabProps) {
                     </tbody>
                   </table>
                   {selected.trace.length > 24 ? (
-                    <p className="mt-2 text-[11px] text-[var(--muted)]">
-                      Showing first 24 of {selected.trace.length} steps — range likely stopped shrinking.
+                    <p className="mt-2 text-[10px] uppercase tracking-[0.12em] text-[var(--muted)]">
+                      Showing first 24 of {selected.trace.length} steps
                     </p>
                   ) : null}
                 </div>
@@ -178,22 +179,22 @@ export function MissionLab({ mission, starter }: MissionLabProps) {
           )}
         </div>
 
-        <div className="border-t border-[var(--stroke)] px-4 py-3">
-          <div className="flex items-center justify-between">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">Field notes</p>
+        <div className="border-t border-[var(--stroke)] py-4">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-sm font-medium">Hints</h2>
             <button
               type="button"
               onClick={() => setHintCount((count) => Math.min(mission.hints.length, count + 1))}
               disabled={hintCount >= mission.hints.length}
-              className="text-xs text-[var(--accent)] disabled:text-[var(--muted)]"
+              className="text-xs text-[var(--accent)] hover:underline disabled:cursor-not-allowed disabled:text-[var(--muted)]"
             >
               {hintCount >= mission.hints.length ? "All notes open" : "Reveal next note"}
             </button>
           </div>
           {hintCount === 0 ? (
-            <p className="mt-2 text-xs text-[var(--muted)]">Notes stay sealed until you ask. Investigate first.</p>
+            <p className="mt-3 text-sm leading-6 text-[var(--muted)]">Open a hint if you get stuck.</p>
           ) : (
-            <ol className="mt-2 list-decimal space-y-2 pl-4 text-xs text-[var(--ink)]">
+            <ol className="mt-3 list-decimal space-y-2 pl-4 text-sm leading-6 text-[var(--ink)]">
               {mission.hints.slice(0, hintCount).map((hint) => (
                 <li key={hint}>{hint}</li>
               ))}
@@ -207,9 +208,8 @@ export function MissionLab({ mission, starter }: MissionLabProps) {
 
 function statusClass(status?: CaseResult["status"]) {
   if (status === "pass") return "text-[var(--ok)]";
-  if (status === "fail") return "text-[var(--bad)]";
+  if (status === "fail" || status === "error") return "text-[var(--bad)]";
   if (status === "step_limit" || status === "timeout") return "text-[var(--warn)]";
-  if (status === "error") return "text-[var(--bad)]";
   return "text-[var(--muted)]";
 }
 

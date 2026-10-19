@@ -12,7 +12,7 @@ export function CodeEditor({ value, onChange }: CodeEditorProps) {
     <Editor
       height="100%"
       defaultLanguage="javascript"
-      theme="vs-dark"
+      theme="vs-light"
       value={value}
       onChange={(next) => onChange(next ?? "")}
       options={{
@@ -22,8 +22,13 @@ export function CodeEditor({ value, onChange }: CodeEditorProps) {
         scrollBeyondLastLine: false,
         automaticLayout: true,
         tabSize: 2,
-        padding: { top: 12 },
+        padding: { top: 16, bottom: 16 },
+        wordWrap: "on",
+        lineNumbersMinChars: 3,
+        glyphMargin: false,
+        roundedSelection: false,
       }}
+      loading={<div className="flex h-full items-center justify-center bg-[var(--panel)] text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Loading editor</div>}
     />
   );
 }

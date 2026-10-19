@@ -24,6 +24,8 @@ export interface Mission {
   concepts: string[];
   hints: string[];                    // ordered, vaguest first
   cases: TestCase[];
+  seed?: string;
+  variant?: string;
 }
 
 export type CaseStatus = "pass" | "fail" | "error" | "step_limit" | "timeout";
