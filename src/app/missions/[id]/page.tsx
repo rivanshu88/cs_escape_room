@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MissionLab } from "@/components/MissionLab";
+import { listMissionBundles, SUBJECTS } from "@/lib/catalog";
 import { loadMissionBundle } from "@/lib/loadMission";
 import { SEED_PATTERN } from "@/lib/random";
 
@@ -23,6 +24,17 @@ export default async function MissionPage({
   }
 
   const { mission, starter } = bundle;
+  const subjectOrder = new Map(SUBJECTS.map((subject, index) => [subject.id, index]));
+  const orderedMissions = (await listMissionBundles()).sort((left, right) =>
+    (subjectOrder.get(left.mission.subject) ?? 0) - (subjectOrder.get(right.mission.subject) ?? 0)
+    || left.mission.difficulty - right.mission.difficulty
+    || left.folder.localeCompare(right.folder)
+  );
+  const currentIndex = orderedMissions.findIndex((item) => item.folder === id);
+  const nextMission = currentIndex >= 0 ? orderedMissions[currentIndex + 1] : undefined;
+  const nextMissionHref = nextMission
+    ? `/missions/${nextMission.folder}${seed ? `?seed=${encodeURIComponent(seed)}` : ""}`
+    : undefined;
 
   return (
     <main className="flex min-h-0 flex-1 flex-col pb-10">
@@ -54,7 +66,13 @@ export default async function MissionPage({
         </p>
       </section>
 
-      <MissionLab mission={mission} starter={starter} folder={id} />
+      <MissionLab
+        key={`${mission.id}:${mission.seed ?? "static"}`}
+        mission={mission}
+        starter={starter}
+        folder={id}
+        nextMissionHref={nextMissionHref}
+      />
     </main>
   );
 }

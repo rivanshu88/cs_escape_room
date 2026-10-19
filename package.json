@@ -6,8 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test": "node --import tsx --test --test-reporter=tap scripts/escape-room.test.ts",
     "lint": "eslint",
-    "validate:missions": "tsx scripts/validate-missions.ts"
+    "validate:missions": "tsx scripts/validate-missions.ts",
+    "validate:escape-room": "tsx scripts/validate-escape-room.ts"
   },
   "dependencies": {
     "@google/genai": "^2.30.0",

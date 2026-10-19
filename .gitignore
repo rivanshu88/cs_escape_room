@@ -39,6 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.tsupgrader/
 
 # keep the template, ignore real secrets
 !.env.example

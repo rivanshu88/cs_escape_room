@@ -51,3 +51,294 @@ select {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
+
+.escape-entry {
+  position: relative;
+  display: flex;
+  min-height: 230px;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  border: 1px solid rgba(212, 83, 83, 0.36);
+  background:
+    radial-gradient(ellipse at 76% 44%, rgba(111, 22, 29, 0.3), transparent 46%),
+    linear-gradient(115deg, #111112 0%, #191415 55%, #100f10 100%);
+  color: #f5f0eb;
+  padding: 1.5rem;
+}
+
+.escape-entry::before,
+.escape-room__grid::before {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(190, 71, 71, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(190, 71, 71, 0.07) 1px, transparent 1px);
+  background-size: 34px 34px;
+  content: "";
+  mask-image: linear-gradient(110deg, transparent, #000 48%, #000);
+  pointer-events: none;
+}
+
+.escape-entry__content,
+.escape-entry__status {
+  position: relative;
+  z-index: 1;
+}
+
+.escape-entry__eyebrow,
+.escape-entry__status {
+  color: #c79292;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+}
+
+.escape-entry__title {
+  margin-top: 0.8rem;
+  font-size: clamp(1.3rem, 2vw, 1.8rem);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+}
+
+.escape-entry__copy {
+  margin-top: 0.5rem;
+  max-width: 40rem;
+  color: #bcb3b0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.escape-entry__button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  overflow: hidden;
+  margin-top: 1.25rem;
+  border: 1px solid rgba(218, 94, 94, 0.68);
+  background: rgba(97, 22, 29, 0.48);
+  padding: 0.8rem 1rem;
+  color: #fff7f4;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+}
+
+.escape-entry__button::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 20%, rgba(255, 226, 226, 0.12), transparent 75%);
+  content: "";
+  transform: translateX(-120%);
+  transition: transform 500ms ease;
+}
+
+.escape-entry__button:hover {
+  border-color: #ef9292;
+  background: rgba(125, 29, 39, 0.65);
+  box-shadow: inset 0 0 26px rgba(178, 48, 59, 0.16), 0 0 22px rgba(178, 48, 59, 0.13);
+}
+
+.escape-entry__button:hover::after {
+  transform: translateX(120%);
+}
+
+.escape-entry__mark {
+  color: #f08d8d;
+  font-size: 1.25rem;
+  transition: transform 180ms ease;
+}
+
+.escape-entry__button:hover .escape-entry__mark {
+  transform: rotate(12deg) scale(1.12);
+}
+
+.escape-entry__arrow {
+  color: #d99b9b;
+}
+
+.escape-entry__status {
+  margin-top: 1.2rem;
+}
+
+.escape-room {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid rgba(212, 83, 83, 0.38);
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(109, 20, 28, 0.22), transparent 42%),
+    #101011;
+  color: #f3efec;
+}
+
+.escape-room__grid {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  overflow: hidden;
+}
+
+.escape-room__grid::before {
+  mask-image: linear-gradient(180deg, #000, transparent 80%);
+  animation: escape-grid-drift 34s linear infinite;
+}
+
+.escape-room__shell {
+  position: relative;
+  z-index: 1;
+  padding: clamp(1.1rem, 4vw, 2.6rem);
+}
+
+.escape-room__mono {
+  color: #c89292;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.escape-room__link {
+  color: #d9bcbc;
+  font-size: 0.78rem;
+  transition: color 160ms ease;
+}
+
+.escape-room__link:hover {
+  color: #fff;
+}
+
+.escape-room__language {
+  position: relative;
+  display: flex;
+  min-height: 205px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  overflow: hidden;
+  border: 1px solid rgba(204, 113, 113, 0.34);
+  background:
+    radial-gradient(ellipse at 82% 10%, rgba(146, 37, 48, 0.2), transparent 55%),
+    rgba(28, 25, 26, 0.88);
+  padding: 1.25rem;
+  text-align: left;
+  transition: border-color 200ms ease, background-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+
+.escape-room__language:hover,
+.escape-room__language[aria-pressed="true"] {
+  border-color: rgba(246, 135, 135, 0.84);
+  background-color: rgba(51, 26, 29, 0.96);
+  box-shadow: inset 0 0 42px rgba(174, 48, 59, 0.12), 0 0 26px rgba(189, 44, 57, 0.16);
+}
+
+.escape-room__language:disabled {
+  cursor: wait;
+  opacity: 0.78;
+}
+
+.escape-room__language-symbol {
+  display: grid;
+  width: 3.1rem;
+  height: 3.1rem;
+  place-items: center;
+  border: 1px solid rgba(232, 127, 127, 0.58);
+  border-radius: 50%;
+  color: #f29a9a;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.9rem;
+  transition: box-shadow 200ms ease, transform 200ms ease;
+  animation: escape-float 7s ease-in-out infinite;
+}
+
+.escape-room__language:nth-child(2) .escape-room__language-symbol {
+  animation-delay: -2.1s;
+}
+
+.escape-room__language:nth-child(3) .escape-room__language-symbol {
+  animation-delay: -4.3s;
+}
+
+.escape-room__language:hover .escape-room__language-symbol,
+.escape-room__language[aria-pressed="true"] .escape-room__language-symbol {
+  box-shadow: 0 0 22px rgba(226, 72, 82, 0.36);
+  transform: rotate(8deg);
+}
+
+.escape-room__panel {
+  border: 1px solid rgba(207, 117, 117, 0.25);
+  background: rgba(23, 22, 23, 0.88);
+  padding: 1rem;
+}
+
+.escape-room__editor {
+  height: 340px;
+  overflow: hidden;
+  border: 1px solid rgba(207, 117, 117, 0.3);
+}
+
+.escape-room__button {
+  display: inline-flex;
+  min-height: 2.65rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(238, 129, 129, 0.62);
+  background: #69222a;
+  padding: 0.65rem 1rem;
+  color: #fff7f4;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.escape-room__button:hover:not(:disabled) {
+  border-color: #f1a0a0;
+  background: #812b35;
+}
+
+.escape-room__button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+@keyframes escape-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -7px; }
+}
+
+@keyframes escape-grid-drift {
+  from { background-position: 0 0; }
+  to { background-position: 34px 34px; }
+}
+
+@media (max-width: 640px) {
+  .escape-entry {
+    min-height: 250px;
+    padding: 1.15rem;
+  }
+
+  .escape-room__language {
+    min-height: 165px;
+  }
+
+  .escape-room__editor {
+    height: 290px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { CodeEditor } from "@/components/CodeEditor";
 import { runCases } from "@/lib/engine";
 import { runMission } from "@/lib/runMission";
@@ -11,6 +12,7 @@ interface MissionLabProps {
   mission: Mission;
   starter: string;
   folder: string;
+  nextMissionHref?: string;
 }
 
 const STATUS_LABEL: Record<CaseResult["status"], string> = {
@@ -21,7 +23,8 @@ const STATUS_LABEL: Record<CaseResult["status"], string> = {
   timeout: "timeout",
 };
 
-export function MissionLab({ mission, starter, folder }: MissionLabProps) {
+export function MissionLab({ mission, starter, folder, nextMissionHref }: MissionLabProps) {
+  const router = useRouter();
   const storeKey = `${mission.id}:${mission.seed ?? "static"}`;
   const stored = useLabStore((state) => state.codeByMission[storeKey]);
   const setCode = useLabStore((state) => state.setCode);
@@ -29,14 +32,23 @@ export function MissionLab({ mission, starter, folder }: MissionLabProps) {
   const [running, setRunning] = useState(false);
   const [results, setResults] = useState<CaseResult[] | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const investigationId = useRef(0);
   const [hintCount, setHintCount] = useState(0);
   const [question, setQuestion] = useState("");
   const [mentorLoading, setMentorLoading] = useState(false);
   const [mentorReply, setMentorReply] = useState("");
   const [mentorError, setMentorError] = useState("");
+  const [advancing, setAdvancing] = useState(false);
 
-  const selected = results?.find((result) => result.caseId === selectedId) ?? results?.[0] ?? null;
-  const cleared = results?.every((result) => result.status === "pass") ?? false;
+  // Keep selection independent from results. Previously an unrun selected case
+  // fell back to results[0], which showed the previous case's trace.
+  const selectedCase = mission.cases.find((testCase) => testCase.id === selectedId) ?? mission.cases[0] ?? null;
+  const selected = selectedCase ? results?.find((result) => result.caseId === selectedCase.id) ?? null : null;
+  const selectedCaseIndex = selectedCase
+    ? mission.cases.findIndex((testCase) => testCase.id === selectedCase.id)
+    : -1;
+  const investigatedCount = results?.length ?? 0;
+  const cleared = mission.cases.length > 0 && investigatedCount === mission.cases.length && results?.every((result) => result.status === "pass");
   const hangCount = results?.filter((result) => result.status === "step_limit" || result.status === "timeout").length ?? 0;
 
   const traceKeys = useMemo(() => {
@@ -49,18 +61,34 @@ export function MissionLab({ mission, starter, folder }: MissionLabProps) {
   }, [selected]);
 
   async function investigate() {
+    const requestId = investigationId.current + 1;
+    investigationId.current = requestId;
+    const codeToRun = code;
+    const preserveSelection = selectedId !== null;
+    setAdvancing(false);
     setRunning(true);
     try {
       let next: CaseResult[];
       try {
-        next = await runMission(code, mission);
+        // An investigation evaluates the whole fixed mission case set. Case
+        // selection only controls which matching result and trace is shown.
+        next = await runMission(codeToRun, mission);
       } catch {
-        next = runCases(code, mission.entry, mission.cases);
+        next = runCases(codeToRun, mission.entry, mission.cases);
       }
+      if (investigationId.current !== requestId) return;
       setResults(next);
-      setSelectedId(next.find((result) => result.status !== "pass")?.caseId ?? next[0]?.caseId ?? null);
+      if (!preserveSelection) {
+        setSelectedId(next.find((result) => result.status !== "pass")?.caseId ?? next[0]?.caseId ?? null);
+      }
+      if (nextMissionHref && next.length === mission.cases.length && next.every((result) => result.status === "pass")) {
+        setAdvancing(true);
+        window.setTimeout(() => {
+          if (investigationId.current === requestId) router.push(nextMissionHref);
+        }, 800);
+      }
     } finally {
-      setRunning(false);
+      if (investigationId.current === requestId) setRunning(false);
     }
   }
 
@@ -155,7 +183,11 @@ export function MissionLab({ mission, starter, folder }: MissionLabProps) {
           {results ? (
             <p className="mt-2 text-sm leading-6 text-[var(--ink)]">
               {cleared
-                ? "All probes cleared. Mission complete."
+                ? advancing
+                  ? "All probes cleared. Loading the next mission…"
+                  : "All probes cleared. Mission complete."
+                : investigatedCount < mission.cases.length
+                  ? `${investigatedCount} of ${mission.cases.length} cases investigated.`
                 : hangCount
                   ? `${hangCount} probe${hangCount === 1 ? "" : "s"} never returned.`
                   : "Some probes still fail. Read the trace."}
@@ -165,10 +197,24 @@ export function MissionLab({ mission, starter, folder }: MissionLabProps) {
           )}
         </div>
 
+        <div className="flex items-center justify-between border-b border-[var(--stroke)] py-2">
+          <span className="text-xs text-[var(--muted)]">
+            Case {selectedCaseIndex + 1} of {mission.cases.length}
+          </span>
+          <button
+            type="button"
+            onClick={() => setSelectedId(mission.cases[selectedCaseIndex + 1]?.id ?? selectedCase?.id ?? null)}
+            disabled={selectedCaseIndex < 0 || selectedCaseIndex >= mission.cases.length - 1}
+            className="text-xs text-[var(--accent)] hover:underline disabled:cursor-not-allowed disabled:text-[var(--muted)]"
+          >
+            Next case
+          </button>
+        </div>
+
         <ul className="max-h-52 overflow-auto border-b border-[var(--stroke)]">
           {mission.cases.map((testCase) => {
             const result = results?.find((item) => item.caseId === testCase.id);
-            const active = selected?.caseId === testCase.id;
+            const active = selectedCase?.id === testCase.id;
             return (
               <li key={testCase.id}>
                 <button
@@ -235,7 +281,9 @@ export function MissionLab({ mission, starter, folder }: MissionLabProps) {
               )}
             </>
           ) : (
-            <p className="text-xs text-[var(--muted)]">Select a case after running.</p>
+            <p className="text-xs text-[var(--muted)]">
+              {selectedCase ? "Investigate this case to capture its trace." : "No cases are available for this mission."}
+            </p>
           )}
         </div>
 

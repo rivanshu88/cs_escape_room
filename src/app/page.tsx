@@ -41,6 +41,22 @@ export default async function Home() {
         ) : null}
       </section>
 
+      <section className="escape-entry my-8 sm:my-10">
+        <div className="escape-entry__content">
+          <p className="escape-entry__eyebrow">A separate simulation experience</p>
+          <h2 className="escape-entry__title">Something is wrong inside the lab.</h2>
+          <p className="escape-entry__copy">
+            Three languages. Fifteen linked failures. One way through: follow the evidence.
+          </p>
+          <Link href="/escape-room" className="escape-entry__button">
+            <span aria-hidden="true" className="escape-entry__mark">⌑</span>
+            <span>THE ESCAPE ROOM</span>
+            <span aria-hidden="true" className="escape-entry__arrow">↗</span>
+          </Link>
+        </div>
+        <p className="escape-entry__status">RESTRICTED SIMULATION · ACCESS AVAILABLE</p>
+      </section>
+
       <section id="subjects" className="scroll-mt-8 border-b border-[var(--stroke)] py-8 sm:py-10">
         <h2 className="text-xl font-medium tracking-tight">Choose a subject</h2>
         <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
