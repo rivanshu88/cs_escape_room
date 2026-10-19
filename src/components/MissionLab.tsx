@@ -1,0 +1,224 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { CodeEditor } from "@/components/CodeEditor";
+import { runCases } from "@/lib/engine";
+import { runMission } from "@/lib/runMission";
+import { useLabStore } from "@/lib/store";
+import type { CaseResult, Mission } from "@/lib/types";
+
+interface MissionLabProps {
+  mission: Mission;
+  starter: string;
+}
+
+const STATUS_LABEL: Record<CaseResult["status"], string> = {
+  pass: "cleared",
+  fail: "mismatch",
+  error: "crash",
+  step_limit: "hang",
+  timeout: "timeout",
+};
+
+export function MissionLab({ mission, starter }: MissionLabProps) {
+  const stored = useLabStore((state) => state.codeByMission[mission.id]);
+  const setCode = useLabStore((state) => state.setCode);
+  const code = stored ?? starter;
+  const [running, setRunning] = useState(false);
+  const [results, setResults] = useState<CaseResult[] | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [hintCount, setHintCount] = useState(0);
+
+  const selected = results?.find((result) => result.caseId === selectedId) ?? results?.[0] ?? null;
+  const cleared = results?.every((result) => result.status === "pass") ?? false;
+  const hangCount = results?.filter((result) => result.status === "step_limit" || result.status === "timeout").length ?? 0;
+
+  const traceKeys = useMemo(() => {
+    if (!selected?.trace.length) return [];
+    const keys = new Set<string>();
+    for (const event of selected.trace) {
+      Object.keys(event.state).forEach((key) => keys.add(key));
+    }
+    return Array.from(keys);
+  }, [selected]);
+
+  async function investigate() {
+    setRunning(true);
+    try {
+      let next: CaseResult[];
+      try {
+        next = await runMission(code, mission);
+      } catch {
+        next = runCases(code, mission.entry, mission.cases);
+      }
+      setResults(next);
+      setSelectedId(next.find((result) => result.status !== "pass")?.caseId ?? next[0]?.caseId ?? null);
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  return (
+    <div className="grid min-h-0 flex-1 grid-cols-1 gap-px bg-[var(--stroke)] lg:grid-cols-[minmax(0,1fr)_320px]">
+      <section className="flex min-h-[520px] flex-col bg-[var(--panel)]">
+        <header className="flex items-center justify-between border-b border-[var(--stroke)] px-4 py-3">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">Evidence locker · {mission.entry}()</p>
+            <h2 className="text-sm font-medium text-[var(--ink)]">Live source</h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setCode(mission.id, starter)}
+              className="rounded-md border border-[var(--stroke)] px-3 py-1.5 text-xs text-[var(--muted)] hover:text-[var(--ink)]"
+            >
+              Reset starter
+            </button>
+            <button
+              type="button"
+              onClick={investigate}
+              disabled={running}
+              className="rounded-md bg-[var(--accent)] px-3 py-1.5 text-xs font-medium text-[#081018] disabled:opacity-60"
+            >
+              {running ? "Running…" : "Investigate"}
+            </button>
+          </div>
+        </header>
+        <div className="min-h-0 flex-1">
+          <CodeEditor value={code} onChange={(next) => setCode(mission.id, next)} />
+        </div>
+      </section>
+
+      <aside className="flex min-h-0 flex-col bg-[var(--panel)]">
+        <div className="border-b border-[var(--stroke)] px-4 py-3">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">Incident board</p>
+          {results ? (
+            <p className="mt-1 text-sm text-[var(--ink)]">
+              {cleared
+                ? "All probes cleared. Mission complete."
+                : hangCount
+                  ? `${hangCount} probe${hangCount === 1 ? "" : "s"} never returned.`
+                  : "Some probes still fail. Read the trace."}
+            </p>
+          ) : (
+            <p className="mt-1 text-sm text-[var(--muted)]">Run an investigation to capture traces.</p>
+          )}
+        </div>
+
+        <ul className="max-h-48 overflow-auto border-b border-[var(--stroke)]">
+          {mission.cases.map((testCase) => {
+            const result = results?.find((item) => item.caseId === testCase.id);
+            const active = selected?.caseId === testCase.id;
+            return (
+              <li key={testCase.id}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedId(testCase.id)}
+                  className={`flex w-full items-center justify-between px-4 py-2 text-left text-xs ${
+                    active ? "bg-[var(--panel-2)] text-[var(--ink)]" : "text-[var(--muted)] hover:bg-[var(--panel-2)]"
+                  }`}
+                >
+                  <span className="font-mono">{testCase.id}</span>
+                  <span className={statusClass(result?.status)}>
+                    {result ? STATUS_LABEL[result.status] : "idle"}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+
+        <div className="min-h-0 flex-1 overflow-auto px-4 py-3">
+          {selected ? (
+            <>
+              <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
+                Trace · {selected.caseId} · {selected.trace.length} steps
+              </p>
+              {selected.message ? (
+                <p className="mt-2 text-xs text-[var(--warn)]">{selected.message}</p>
+              ) : null}
+              {selected.trace.length ? (
+                <div className="mt-3 overflow-x-auto">
+                  <table className="w-full border-collapse font-mono text-[11px]">
+                    <thead>
+                      <tr className="text-left text-[var(--muted)]">
+                        <th className="pb-2 pr-3 font-normal">#</th>
+                        {traceKeys.map((key) => (
+                          <th key={key} className="pb-2 pr-3 font-normal">
+                            {key}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selected.trace.slice(0, 24).map((event) => (
+                        <tr key={event.step} className="text-[var(--ink)]">
+                          <td className="py-1 pr-3 text-[var(--muted)]">{event.step}</td>
+                          {traceKeys.map((key) => (
+                            <td key={key} className="py-1 pr-3">
+                              {formatValue(event.state[key])}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {selected.trace.length > 24 ? (
+                    <p className="mt-2 text-[11px] text-[var(--muted)]">
+                      Showing first 24 of {selected.trace.length} steps — range likely stopped shrinking.
+                    </p>
+                  ) : null}
+                </div>
+              ) : (
+                <p className="mt-3 text-xs text-[var(--muted)]">No probe() snapshots were recorded.</p>
+              )}
+            </>
+          ) : (
+            <p className="text-xs text-[var(--muted)]">Select a case after running.</p>
+          )}
+        </div>
+
+        <div className="border-t border-[var(--stroke)] px-4 py-3">
+          <div className="flex items-center justify-between">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">Field notes</p>
+            <button
+              type="button"
+              onClick={() => setHintCount((count) => Math.min(mission.hints.length, count + 1))}
+              disabled={hintCount >= mission.hints.length}
+              className="text-xs text-[var(--accent)] disabled:text-[var(--muted)]"
+            >
+              {hintCount >= mission.hints.length ? "All notes open" : "Reveal next note"}
+            </button>
+          </div>
+          {hintCount === 0 ? (
+            <p className="mt-2 text-xs text-[var(--muted)]">Notes stay sealed until you ask. Investigate first.</p>
+          ) : (
+            <ol className="mt-2 list-decimal space-y-2 pl-4 text-xs text-[var(--ink)]">
+              {mission.hints.slice(0, hintCount).map((hint) => (
+                <li key={hint}>{hint}</li>
+              ))}
+            </ol>
+          )}
+        </div>
+      </aside>
+    </div>
+  );
+}
+
+function statusClass(status?: CaseResult["status"]) {
+  if (status === "pass") return "text-[var(--ok)]";
+  if (status === "fail") return "text-[var(--bad)]";
+  if (status === "step_limit" || status === "timeout") return "text-[var(--warn)]";
+  if (status === "error") return "text-[var(--bad)]";
+  return "text-[var(--muted)]";
+}
+
+function formatValue(value: unknown) {
+  if (value === undefined) return "—";
+  if (typeof value === "string") return value;
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
