@@ -12,7 +12,9 @@ export const SUBJECTS = [
   { id: "AIML", name: "AI / ML", blurb: "Models that overfit, leak labels, or fail in production." },
 ] as const;
 
-export async function listMissionBundles(): Promise<MissionBundle[]> {
+let productionMissionBundles: Promise<MissionBundle[]> | undefined;
+
+async function readMissionBundles(): Promise<MissionBundle[]> {
   const root = path.join(process.cwd(), "missions");
   let folders: string[] = [];
   try {
@@ -25,6 +27,12 @@ export async function listMissionBundles(): Promise<MissionBundle[]> {
 
   const bundles = await Promise.all(folders.map((folder) => loadMissionBundle(folder).catch(() => null)));
   return bundles.filter((bundle): bundle is MissionBundle => bundle !== null);
+}
+
+export function listMissionBundles(): Promise<MissionBundle[]> {
+  if (process.env.NODE_ENV !== "production") return readMissionBundles();
+  productionMissionBundles ??= readMissionBundles();
+  return productionMissionBundles;
 }
 
 export function missionsBySubject(missions: Mission[]) {

@@ -10,6 +10,7 @@ import type { CaseResult, Mission } from "@/lib/types";
 interface MissionLabProps {
   mission: Mission;
   starter: string;
+  folder: string;
 }
 
 const STATUS_LABEL: Record<CaseResult["status"], string> = {
@@ -20,7 +21,7 @@ const STATUS_LABEL: Record<CaseResult["status"], string> = {
   timeout: "timeout",
 };
 
-export function MissionLab({ mission, starter }: MissionLabProps) {
+export function MissionLab({ mission, starter, folder }: MissionLabProps) {
   const storeKey = `${mission.id}:${mission.seed ?? "static"}`;
   const stored = useLabStore((state) => state.codeByMission[storeKey]);
   const setCode = useLabStore((state) => state.setCode);
@@ -29,6 +30,10 @@ export function MissionLab({ mission, starter }: MissionLabProps) {
   const [results, setResults] = useState<CaseResult[] | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hintCount, setHintCount] = useState(0);
+  const [question, setQuestion] = useState("");
+  const [mentorLoading, setMentorLoading] = useState(false);
+  const [mentorReply, setMentorReply] = useState("");
+  const [mentorError, setMentorError] = useState("");
 
   const selected = results?.find((result) => result.caseId === selectedId) ?? results?.[0] ?? null;
   const cleared = results?.every((result) => result.status === "pass") ?? false;
@@ -56,6 +61,61 @@ export function MissionLab({ mission, starter }: MissionLabProps) {
       setSelectedId(next.find((result) => result.status !== "pass")?.caseId ?? next[0]?.caseId ?? null);
     } finally {
       setRunning(false);
+    }
+  }
+
+  async function askMentor() {
+    setMentorLoading(true);
+    setMentorError("");
+    setMentorReply("");
+
+    const evidence = selected
+      ? JSON.stringify({
+          caseId: selected.caseId,
+          status: selected.status,
+          message: selected.message,
+          expected: selected.expected,
+          actual: selected.actual === undefined ? "<unavailable>" : selected.actual,
+          recentTrace: selected.trace.slice(-5).map((event) => event.state),
+        }).slice(0, 2000)
+      : "No test case has been run yet.";
+
+    try {
+      const response = await fetch("/api/mentor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          missionId: folder,
+          seed: mission.seed,
+          code,
+          evidence,
+          question,
+        }),
+      });
+      const result = (await response.json()) as { reply?: string; error?: string };
+      if (!response.ok) {
+        if (response.status === 429) {
+          const retryAfter = Number(response.headers.get("Retry-After"));
+          const minutes = Number.isFinite(retryAfter) && retryAfter > 0
+            ? Math.ceil(retryAfter / 60)
+            : 1;
+          setMentorError(`Too many questions, try again in ${minutes} minute${minutes === 1 ? "" : "s"}.`);
+        } else if (response.status === 503) {
+          setMentorError("Mentor is not available right now.");
+        } else {
+          setMentorError(result.error ?? "The mentor could not answer right now. Please try again.");
+        }
+        return;
+      }
+      if (typeof result.reply !== "string" || !result.reply.trim()) {
+        setMentorError("The mentor returned an empty response. Please try again.");
+        return;
+      }
+      setMentorReply(result.reply);
+    } catch {
+      setMentorError("The mentor could not be reached. Check your connection and try again.");
+    } finally {
+      setMentorLoading(false);
     }
   }
 
@@ -177,6 +237,41 @@ export function MissionLab({ mission, starter }: MissionLabProps) {
           ) : (
             <p className="text-xs text-[var(--muted)]">Select a case after running.</p>
           )}
+        </div>
+
+        <div className="border-t border-[var(--stroke)] py-4">
+          <h2 className="text-sm font-medium">Mentor</h2>
+          <label htmlFor="mentor-question" className="sr-only">
+            Ask the mentor a question
+          </label>
+          <textarea
+            id="mentor-question"
+            value={question}
+            onChange={(event) => setQuestion(event.target.value)}
+            maxLength={500}
+            rows={3}
+            placeholder="What should I investigate next?"
+            className="mt-3 w-full resize-y border border-[var(--stroke)] bg-white px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+          />
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <span className="text-xs text-[var(--muted)]">{question.length}/500</span>
+            <button
+              type="button"
+              onClick={askMentor}
+              disabled={mentorLoading || !question.trim()}
+              className="rounded-md bg-[var(--accent)] px-3 py-2 text-xs font-medium text-white hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {mentorLoading ? "Asking…" : "Ask mentor"}
+            </button>
+          </div>
+          {mentorError ? (
+            <p role="alert" className="mt-3 text-sm text-[var(--bad)]">{mentorError}</p>
+          ) : null}
+          {mentorReply ? (
+            <p aria-live="polite" className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--ink)]">
+              {mentorReply}
+            </p>
+          ) : null}
         </div>
 
         <div className="border-t border-[var(--stroke)] py-4">

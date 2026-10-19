@@ -19,6 +19,8 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+[Adding and validating missions](./docs/ADDING_MISSIONS.md)
+
 ## First mission
 
 `missions/dsa-binary-search` — broken binary search. Some lookups hang because `lo = mid` does not shrink the range.

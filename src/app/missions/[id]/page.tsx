@@ -54,7 +54,7 @@ export default async function MissionPage({
         </p>
       </section>
 
-      <MissionLab mission={mission} starter={starter} />
+      <MissionLab mission={mission} starter={starter} folder={id} />
     </main>
   );
 }
