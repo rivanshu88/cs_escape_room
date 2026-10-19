@@ -59,8 +59,8 @@ export function MissionLab({ mission, starter }: MissionLabProps) {
   }
 
   return (
-    <div className="grid min-h-0 flex-1 grid-cols-1 gap-px bg-[var(--stroke)] lg:grid-cols-[minmax(0,1fr)_320px]">
-      <section className="flex min-h-[520px] flex-col bg-[var(--panel)]">
+    <div className="grid min-h-0 flex-1 grid-cols-1 gap-px bg-[var(--stroke)] md:grid-cols-[minmax(0,1fr)_300px]">
+      <section className="flex min-h-[360px] flex-col bg-[var(--panel)]">
         <header className="flex items-center justify-between border-b border-[var(--stroke)] px-4 py-3">
           <div>
             <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">Evidence locker · {mission.entry}()</p>
