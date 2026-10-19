@@ -1,0 +1,21 @@
+{
+  "id": "dsa-two-sum-01",
+  "title": "The Pair That Went Missing",
+  "subject": "DSA",
+  "difficulty": 1,
+  "briefing": "A cargo manifest stores item weights in an array. The scanner should find two distinct positions whose weights add up to the requested capacity.",
+  "symptom": "Some valid pairs, especially those involving the final item, are reported as missing.",
+  "entry": "twoSum",
+  "concepts": ["arrays", "nested loops", "indices", "boundary conditions"],
+  "hints": [
+    "Compare the successful case with one where the second matching value is near the end.",
+    "Follow the inner loop's j value. Which array positions can it actually reach?",
+    "The final index is a valid candidate too. Check the inner loop's stopping condition."
+  ],
+  "cases": [
+    { "id": "c1", "args": [[2, 7, 11, 15], 9], "expected": [0, 1] },
+    { "id": "c2", "args": [[3, 2, 4], 6], "expected": [1, 2] },
+    { "id": "c3", "args": [[3, 3], 6], "expected": [0, 1] },
+    { "id": "c4", "args": [[1, 2, 3], 20], "expected": null }
+  ]
+}

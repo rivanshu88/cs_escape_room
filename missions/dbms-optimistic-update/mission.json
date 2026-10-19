@@ -1,0 +1,21 @@
+{
+  "id": "dbms-optimistic-update-01",
+  "title": "The Update That Trusted an Old Version",
+  "subject": "DBMS",
+  "difficulty": 3,
+  "briefing": "A record editor uses optimistic concurrency: write only when the stored version still matches the version the editor originally read.",
+  "symptom": "Fresh edits are rejected, while an edit based on stale data can overwrite a newer value.",
+  "entry": "applyUpdate",
+  "concepts": ["transactions", "optimistic concurrency", "version columns", "lost updates"],
+  "hints": [
+    "Compare the record's current version with the version supplied by the editor.",
+    "The version check should decide whether the write is safe before incrementing it.",
+    "A write is allowed only when currentVersion equals expectedVersion."
+  ],
+  "cases": [
+    { "id": "c1", "args": [{"id":"r1","version":3,"value":"old"}, 3, "new"], "expected": {"id":"r1","version":4,"value":"new"} },
+    { "id": "c2", "args": [{"id":"r2","version":5,"value":"latest"}, 4, "stale edit"], "expected": null },
+    { "id": "c3", "args": [{"id":"r3","version":0,"value":"draft"}, 0, "saved"], "expected": {"id":"r3","version":1,"value":"saved"} },
+    { "id": "c4", "args": [{"id":"r4","version":2,"value":"current"}, 1, "overwritten"], "expected": null }
+  ]
+}

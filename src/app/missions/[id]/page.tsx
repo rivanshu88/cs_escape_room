@@ -44,6 +44,11 @@ export default async function MissionPage({
           <span className="font-medium">Observed:</span>{" "}
           <span className="text-[var(--muted)]">{mission.symptom}</span>
         </p>
+        {mission.variant ? (
+          <p className="mt-2 text-xs text-[var(--muted)]">
+            Random incident: {mission.variant.replaceAll("-", " ")}
+          </p>
+        ) : null}
         <p className="mt-3 text-sm text-[var(--muted)]">
           Concepts: {mission.concepts.join(", ")}
         </p>

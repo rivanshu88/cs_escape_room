@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
 import { loadMissionBundle } from "@/lib/loadMission";
 import { SEED_PATTERN } from "@/lib/random";
@@ -12,7 +12,7 @@ const field = (body: Record<string, unknown>, key: string, max: number) => {
 
 export async function POST(request: Request) {
   // The key lives only in server memory. It is never sent to the browser.
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return NextResponse.json({ error: "Mentor is not configured." }, { status: 503 });
 
   let body: Record<string, unknown>;
@@ -44,19 +44,17 @@ export async function POST(request: Request) {
   ].join("\n");
 
   try {
-    const client = new Anthropic({ apiKey });
-    const message = await client.messages.create({
-      model: "claude-sonnet-5-5",
-      max_tokens: 300,
-      system,
-      messages: [
-        {
-          role: "user",
-          content: `<learner_code>\n${code}\n</learner_code>\n<evidence>\n${evidence}\n</evidence>\nLearner asks: ${question}`,
-        },
-      ],
+    const client = new GoogleGenAI({ apiKey });
+    const response = await client.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: `<learner_code>\n${code}\n</learner_code>\n<evidence>\n${evidence}\n</evidence>\nLearner asks: ${question}`,
+      config: {
+        systemInstruction: system,
+        maxOutputTokens: 300,
+      },
     });
-    const reply = message.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("\n");
+    const reply = response.text?.trim();
+    if (!reply) return NextResponse.json({ error: "The mentor returned no response." }, { status: 502 });
     return NextResponse.json({ reply });
   } catch {
     return NextResponse.json({ error: "The mentor is unavailable right now." }, { status: 502 });

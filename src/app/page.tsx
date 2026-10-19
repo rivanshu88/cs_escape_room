@@ -19,10 +19,11 @@ export default async function Home() {
             Each mission turns a CS concept into a debugging exercise.
           </p>
           <Link
-            href={featured ? `/missions/${featured.folder}` : "#missions"}
+            href={featured ? `/play/${featured.mission.subject}` : "#missions"}
+            prefetch={false}
             className="mt-7 inline-flex rounded-md bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-white hover:bg-[var(--accent-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
           >
-            {featured ? "Start a mission" : "Browse missions"}
+            {featured ? "Start a random mission" : "Browse missions"}
           </Link>
         </div>
 
@@ -55,6 +56,7 @@ export default async function Home() {
               {wing.missions.length ? (
                 <Link
                   href={`/play/${wing.id}`}
+                  prefetch={false}
                   className="inline-flex items-center rounded-md border border-[var(--stroke)] bg-white px-3 text-xs font-medium text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
                 >
                   Random mission

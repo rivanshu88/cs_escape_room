@@ -1,0 +1,22 @@
+{
+  "id": "compilers-parentheses-01",
+  "title": "The Parser Accepted an Impossible Nesting",
+  "subject": "Compilers",
+  "difficulty": 2,
+  "briefing": "A parser's first validation pass checks whether an expression has balanced parentheses before building its syntax tree.",
+  "symptom": "An expression with a closing parenthesis before its opener is accepted as balanced.",
+  "entry": "hasBalancedParens",
+  "concepts": ["parsing", "delimiter matching", "stacks", "invariants"],
+  "hints": [
+    "Try an expression that begins with a closing parenthesis.",
+    "Equal counts at the end do not prove the nesting was valid along the way.",
+    "The nesting depth must never become negative while scanning from left to right."
+  ],
+  "cases": [
+    { "id": "c1", "args": ["(a+b)"], "expected": true },
+    { "id": "c2", "args": [")( "], "expected": false },
+    { "id": "c3", "args": ["((x)"], "expected": false },
+    { "id": "c4", "args": ["x+y"], "expected": true },
+    { "id": "c5", "args": ["(a*(b+c))"], "expected": true }
+  ]
+}

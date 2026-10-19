@@ -1,0 +1,21 @@
+{
+  "id": "dbms-posted-total-01",
+  "title": "The Ledger Counted Pending Work",
+  "subject": "DBMS",
+  "difficulty": 2,
+  "briefing": "The finance report should total only transactions whose status is posted. Pending transactions have not committed and must not affect the report.",
+  "symptom": "The displayed total includes money from transactions that are still pending.",
+  "entry": "postedTotal",
+  "concepts": ["transactions", "filtering", "aggregation", "data consistency"],
+  "hints": [
+    "Check which transaction statuses contribute to the reported sum.",
+    "A pending transaction is not the same as a posted transaction.",
+    "Include a row only when its status is exactly posted."
+  ],
+  "cases": [
+    { "id": "c1", "args": [[{"status":"posted","amount":12},{"status":"pending","amount":8},{"status":"posted","amount":5}]], "expected": 17 },
+    { "id": "c2", "args": [[{"status":"pending","amount":30}]], "expected": 0 },
+    { "id": "c3", "args": [[]], "expected": 0 },
+    { "id": "c4", "args": [[{"status":"posted","amount":-3},{"status":"void","amount":10}]], "expected": -3 }
+  ]
+}

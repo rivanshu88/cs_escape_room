@@ -1,0 +1,21 @@
+{
+  "id": "os-priority-scheduler-01",
+  "title": "The Backwards Priority Queue",
+  "subject": "OS",
+  "difficulty": 2,
+  "briefing": "A small scheduler should run queued jobs in ascending priority number, where a lower number means the job is more urgent.",
+  "symptom": "The least urgent job repeatedly runs before the critical work.",
+  "entry": "scheduleByPriority",
+  "concepts": ["scheduling", "priority queues", "sorting", "comparators"],
+  "hints": [
+    "Compare the first job run with its priority number.",
+    "The comparator determines whether lower or higher numbers come first.",
+    "For ascending order, a smaller priority value must sort before a larger one."
+  ],
+  "cases": [
+    { "id": "c1", "args": [[{"id":"backup","priority":3},{"id":"interactive","priority":1},{"id":"batch","priority":2}]], "expected": ["interactive", "batch", "backup"] },
+    { "id": "c2", "args": [[{"id":"first","priority":1},{"id":"second","priority":2}]], "expected": ["first", "second"] },
+    { "id": "c3", "args": [[]], "expected": [] },
+    { "id": "c4", "args": [[{"id":"only","priority":4}]], "expected": ["only"] }
+  ]
+}

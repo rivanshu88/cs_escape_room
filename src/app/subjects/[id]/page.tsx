@@ -30,7 +30,18 @@ export default async function SubjectPage({
       </section>
 
       <section className="py-8">
-        <h2 className="text-xl font-medium tracking-tight">Missions</h2>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h2 className="text-xl font-medium tracking-tight">Missions</h2>
+          {missions.length ? (
+            <Link
+              href={`/play/${subject.id}`}
+              prefetch={false}
+              className="rounded-md bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-white hover:bg-[var(--accent-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+            >
+              Start a random mission
+            </Link>
+          ) : null}
+        </div>
         {missions.length ? (
           <ul className="mt-4 divide-y divide-[var(--stroke)] border-y border-[var(--stroke)]">
             {missions.map(({ folder, mission }) => (

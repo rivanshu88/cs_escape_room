@@ -1,0 +1,21 @@
+{
+  "id": "networks-packet-order-01",
+  "title": "The Reassembled Message Reads Backwards",
+  "subject": "Networks",
+  "difficulty": 2,
+  "briefing": "Packets arrive out of order. The receiver must sort them by their sequence number before joining their payloads.",
+  "symptom": "The output message contains every fragment, but the text is scrambled.",
+  "entry": "reassemble",
+  "concepts": ["packet sequencing", "sorting", "reliable transport", "comparators"],
+  "hints": [
+    "Look at the sequence numbers in the order the receiver joins the payloads.",
+    "The sort comparator determines whether earlier or later packets come first.",
+    "Reassembly needs sequence numbers in ascending order."
+  ],
+  "cases": [
+    { "id": "c1", "args": [[{"sequence":2,"payload":"B"},{"sequence":1,"payload":"A"},{"sequence":3,"payload":"C"}]], "expected": "ABC" },
+    { "id": "c2", "args": [[{"sequence":1,"payload":"h"},{"sequence":2,"payload":"i"}]], "expected": "hi" },
+    { "id": "c3", "args": [[]], "expected": "" },
+    { "id": "c4", "args": [[{"sequence":4,"payload":"!"},{"sequence":2,"payload":"o"},{"sequence":3,"payload":"k"}]], "expected": "ok!" }
+  ]
+}
